@@ -3,6 +3,7 @@ bin/
 !.mvn/wrapper/maven-wrapper.jar
 
 ### STS ###
+.gitignore
 .apt_generated
 .classpath
 .factorypath
@@ -11,7 +12,7 @@ bin/
 .springBeans
 
 ### IntelliJ IDEA ###
-.idea
+*.idea
 *.iws
 *.iml
 *.ipr
