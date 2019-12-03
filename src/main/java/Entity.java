@@ -14,7 +14,7 @@ public class Entity {
     private BigInteger privateKey;
     private String fromWallet;
     private String toWallet;
-    private BigInteger value;
+    private String value;
     private BigInteger gasLimit;
     private BigInteger gasPrice;
     private BigInteger nonce;

@@ -6,7 +6,7 @@ public class EthereumApplication {
 
     public static void main(String[] args) throws Exception {
 
-        EthereumConnection ethConnection=new EthereumConnection();
+//        EthereumConnection ethConnection=new EthereumConnection();
         Entity entity=new Entity();
 
 //        Erc20Service erc20Service=new Erc20Service();
@@ -22,11 +22,14 @@ public class EthereumApplication {
 //
 //        System.out.println("Enter To wallet:  ");
 //        entity.setToWallet(scanner.next());
-//
+////
         System.out.println("Enter Ether amount:  ");
-        entity.setValue(scanner.nextBigInteger());
+        entity.setValue(scanner.next());
+//
+//        wallet.getBalance();
+//        wallet.sendEther("0x5B7415F8f61C29Fc7A01B7c67e4B5067ea26e3C9", "0xdA35deE8EDDeAA556e4c26268463e26FB91ff74f", entity.getValue());
 
-        wallet.getBalance();
-        wallet.sendEther("0x5B7415F8f61C29Fc7A01B7c67e4B5067ea26e3C9", "0xdA35deE8EDDeAA556e4c26268463e26FB91ff74f", entity.getValue());
+//        EtherService etherService=new EtherService();
+//        etherService.sendEther();
     }
 }
