@@ -2,7 +2,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Convert;
@@ -12,6 +11,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 @Slf4j
 public class Wallet {
@@ -106,22 +108,67 @@ public class Wallet {
         entity.setToWallet(toAddress);
         entity.setValue(value);
 
-        Web3j web3j=Web3j.build(new HttpService("https://rinkeby.infura.io/v3/2b319b8acaca45ecbd5d9ed2f99c85ca"));
+        Web3j web3j = Web3j.build(new HttpService("https://rinkeby.infura.io/v3/2b319b8acaca45ecbd5d9ed2f99c85ca"));
+        String privateKey = "0xB25FD52AF697DA0E37EC40738A8AE961DBE26C68B56033738FD78ADDAA64178B";
+        String publicKey = "0x34dD20C852f3595336eF945750Cf426d6Dd4EEA4";
+        BigInteger nonce = getNonce(publicKey);
+        System.out.println("Nonce >>>>> " + nonce);
+//        BigInteger gasPrice=requestCurrentGasPrice();
 
-        BigInteger gasPrice=requestCurrentGasPrice();
-        entity.setGasLimit(gasPrice.multiply(BigInteger.valueOf(2)));
+//        entity.setGasLimit(gasPrice.multiply(BigInteger.valueOf(1)));
 
-        BigInteger nonce=getNonce(entity.getFromWallet());
-        System.out.println("Nonce >>>> "+nonce);
+//        entity.setGasPrice(gasPrice);
 
-        entity.setGasPrice(gasPrice);
+        String etherValue = entity.getValue().toString();
+        String amountWei="0x"+Convert.toWei(etherValue, Convert.Unit.ETHER).toBigInteger();
+        System.out.println("Amount WEI >>>>>>> " +amountWei);
 
-        Transaction transaction=Transaction.createEtherTransaction(entity.getFromWallet(),nonce,entity.getGasPrice(),entity.getGasLimit(),entity.getToWallet(), entity.getValue());
-        Credentials credentials=Credentials.create(entity.getPrivateKey().toString(),entity.getFromWallet());
+        BigInteger gasPrice = BigInteger.valueOf(21000);
+        BigInteger gasLimit = gasPrice.multiply(BigInteger.valueOf(2));
 
+        //create raw transaction
+        RawTransaction rawTransaction = RawTransaction.createTransaction(
+                nonce, gasPrice, gasLimit, "0x5B7415F8f61C29Fc7A01B7c67e4B5067ea26e3C9", amountWei);
+
+//      System.out.println("Gas Price >>>> " + entity.getGasPrice() + " Gas Limit " + entity.getGasLimit());
+
+        //set credentials
+
+        Credentials credentials = Credentials.create(privateKey);
+
+        //sign transaction
+        byte[] txSignedBytes = TransactionEncoder.signMessage(rawTransaction, 4, credentials);
+        String txSigned = Numeric.toHexString(txSignedBytes);
+
+        System.out.println("Signed Transaction >>>>>> " + txSigned);
+
+        //broadcast signed transaction
+        try {
+            EthSendTransaction sendTransaction = web3j.ethSendRawTransaction(txSigned).sendAsync().get();
+//            String error = sendTransaction.getError().getMessage();
+//            System.out.println("error >>>>> " +error);
+            String txHash = sendTransaction.getTransactionHash();
+            System.out.println("Send Transaction >>>> " + txHash);
+
+            //  assertTrue(error == null);
+            if (!txHash.isEmpty())
+            {
+                System.out.println("Transaction Hash >>>>> " + txHash);
+                transferStatus=true;
+                String balance=getBalance("0x5B7415F8f61C29Fc7A01B7c67e4B5067ea26e3C9");
+                System.out.println("New Balance >>>>>> " +balance);
+            }
+
+        } catch (RuntimeException runtimeException) {
+
+            runtimeException.printStackTrace();
+        }
+
+        // assertFalse(txHash.isEmpty());
 
         return transferStatus;
     }
+
     public BigInteger requestCurrentGasPrice() throws Exception {
 
         Web3j web3j=Web3j.build(new HttpService("https://rinkeby.infura.io/v3/2b319b8acaca45ecbd5d9ed2f99c85ca"));
@@ -133,9 +180,10 @@ public class Wallet {
 
         Web3j web3j=Web3j.build(new HttpService("https://rinkeby.infura.io/v3/2b319b8acaca45ecbd5d9ed2f99c85ca"));
         EthGetTransactionCount transactionCount = web3j.ethGetTransactionCount(from, DefaultBlockParameterName.LATEST).sendAsync().get();
-        BigInteger nonce = transactionCount.getTransactionCount();
-        log.info("transfer nonce : "+ nonce, 4);
-        return nonce;
+        System.out.println("Get Nounce DATA >>>>>>> " +transactionCount.toString());
+        entity.setNonce(transactionCount.getTransactionCount());
+        return entity.getNonce();
     }
+
 }
 
